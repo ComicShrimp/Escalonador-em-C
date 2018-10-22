@@ -27,16 +27,18 @@ int main(void) {
 
     pthread_t so;
 
-    int memoria[MEM];
+    int memoria[MEM]; //Aloca Memoria
 
-    int sinal = 0;
-    int id_proc = -1;
+    int sinal = 0; //Sinalização para o "Processador"
+    int id_proc = -1; //ID do processo que fez a sinalização
 
+    //Inicializa toda a memoria como -1
     int i;
     for(i = 0;i < MEM;i++){
         memoria[i] = -1;
     }
 
+    //Numero total de proocessos
     int num_proc = 1;
 
     Processo *proc = aloca_processo(num_proc, &sinal, &id_proc);
@@ -62,6 +64,8 @@ int main(void) {
         }
 
     }
+
+    pthread_join(so, NULL);
 
     return 0;
 }
