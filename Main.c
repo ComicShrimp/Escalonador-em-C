@@ -72,9 +72,9 @@ void* escalonar(void* dados){
     data = (Data*) dados;
 
     int n_proc = data->num_proce;
-    Processo *p = data->p;
     int id_proc = data->id_proc;
     int sinal = data->sinal;
+    Processo *p = data->p;
 
     /*
         Resto do programa
