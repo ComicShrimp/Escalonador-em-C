@@ -16,7 +16,7 @@ enum contexto{
     Execucao
 };
 
-Processo* aloca_processo(int num_proc){
+Processo* aloca_processo(int num_proc, int *sinal, int *id_proc){
 
     Processo *proce = malloc(num_proc * sizeof(Processo));
 

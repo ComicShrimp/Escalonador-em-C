@@ -2,6 +2,6 @@
 
 typedef struct processo Processo;
 
-Processo* aloca_processo(int num_proc);
+Processo* aloca_processo(int num_proc, int *sinal, int *id_proc);
 
 int get_temp(Processo *p, int pos);
