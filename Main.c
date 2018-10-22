@@ -38,9 +38,15 @@ int main(void) {
         memoria[i] = -1;
     }
 
+    printf("Numero de Processos(%d espacos de memoria): \n", MEM);
+
+    printf("Tempo de chegada dos processos:\n");
+    printf("0 - Zero\n1 - Aleatorio\n3 - Fixo\n");
+
     //Numero total de proocessos
     int num_proc = 1;
 
+    //Aloca memoria para todos processos
     Processo *proc = aloca_processo(num_proc, &sinal, &id_proc);
 
     Data data;
