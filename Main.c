@@ -108,6 +108,11 @@ void* escalonar(void* dados){
     Processo *p = data->p;
     Fila *proc_proces = data->proc_proces;
 
+    int i;
+    for (i = 0; i < n_proc; i++) {
+        /* code */
+    }
+
     /*
         Resto do programa
     */

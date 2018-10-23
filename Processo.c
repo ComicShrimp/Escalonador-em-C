@@ -26,3 +26,15 @@ Processo* aloca_processo(int num_proc, int *sinal, int *id_proc){
 int get_temp(Processo *p, int pos){
     return p[pos].temp_cpu;
 }
+
+void set_temp(Processo *p, int pos, int tempo){
+    p[pos].temp_cpu = tempo;
+}
+
+int get_contexto(Processo *p, int pos){
+    return p[pos].estado;
+}
+
+void set_contexto(Processo *p, int pos, int contexto){
+    p[pos].estado = contexto;
+}
