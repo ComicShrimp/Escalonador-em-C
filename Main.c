@@ -3,6 +3,7 @@
 #include <pthread.h>
 #include <unistd.h>
 #include "Processo.h"
+#include "fila.h"
 
 #define MEM 200
 
@@ -17,6 +18,7 @@ typedef struct data{
     int num_proce;
     int *sinal;
     int *id_proc;
+    Fila *proc_proces;
 } Data;
 
 void* escalonar(void* dados);
@@ -28,6 +30,8 @@ int main(void) {
     pthread_t so;
 
     int memoria[MEM]; //Aloca Memoria
+
+    Fila *proc_proces = fila_cria();
 
     int sinal = 0; //Sinalização para o "Processador"
     int id_proc = -1; //ID do processo que fez a sinalização
@@ -54,19 +58,36 @@ int main(void) {
     data.p = proc;
     data.sinal = &sinal;
     data.id_proc = &id_proc;
+    data.proc_proces = proc_proces;
 
     pthread_create(&so, NULL, escalonar, (void*) &data);
 
+    long tmp_ocisoso = 0;
+
+    //Esse argumento do laço não está legal, pois se houver interrupções
     for(i = 0;i < num_proc;i++){
 
         long tmp_init,tmp_fim;
         tmp_fim = tmp_init = time(NULL);
 
-        while ((difftime(tmp_fim, tmp_init) < get_temp(proc, i)) && !sinal) {
+        //Verifica se o processador está ocioso e contabiliza o tempo total
+        if(fila_vazia(proc_proces)){
+            while (fila_vazia(proc_proces)) {
+                //printf("Ocioso\n");
+            }
+
+            tmp_ocisoso += difftime(time(NULL), tmp_init);
+
+        }else{
+
+            //Esse laço não pode ter sleep, pois ele deve ser capaz de ser
+            //interrompido pela sinalização.
+            while ((difftime(tmp_fim, tmp_init) < get_temp(proc, i)) && !sinal) {
 
 
 
-            tmp_fim = time(NULL);
+                tmp_fim = time(NULL);
+            }
         }
 
     }
@@ -85,6 +106,7 @@ void* escalonar(void* dados){
     int id_proc = data->id_proc;
     int sinal = data->sinal;
     Processo *p = data->p;
+    Fila *proc_proces = data->proc_proces;
 
     /*
         Resto do programa

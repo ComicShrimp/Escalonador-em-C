@@ -13,14 +13,14 @@ struct fila {
 	Lista* fim;	// ponteiro para o n� do fim da fila
 };
 
-Fila* fila_cria(void) {						// cria uma fila, alocando mem�ria para ela
-	Fila* f = (Fila*) malloc(sizeof(Fila));	// aloca mem�ria do tamanho de uma fila
+Fila* fila_cria(void) {						// cria uma fila, alocando memória para ela
+	Fila* f = (Fila*) malloc(sizeof(Fila));	// aloca memória do tamanho de uma fila
 	f->ini = f->fim = NULL;					// inicializa os dois ponteiros (ini e fim) como nulos, pois a fila est� vazia
 	return f;								// retorna o ponteiro que aponta para o endere�o alocado
 }
 
 void fila_insere(Fila* f, float v) {			// insere um elemento (n�) no fim da fila
-	Lista* n = (Lista*) malloc(sizeof(Lista));	// aloca mem�ria para o novo n�
+	Lista* n = (Lista*) malloc(sizeof(Lista));	// aloca memória para o novo n�
 	n->info = v;								// guarda no n� o valor passado como argumento (float v)
 	n->prox = NULL;								// faz o pr�ximo do n� ser nulo, pois ser� o �ltimo
 	if(f->fim != NULL)							// verifica se a fila n�o est� vazia...
@@ -50,7 +50,7 @@ float fila_retira(Fila* f) {		// remove o primeiro elemento da fila (FIFO)
 	return v;						// retorna o valor do n� removido (float)
 }
 
-void fila_libera(Fila* f) {		// libera a mem�ria alocada para a fila
+void fila_libera(Fila* f) {		// libera a memória alocada para a fila
 	Lista* q = f->ini;			// ponteiro auxiliar para come�ar a percorrer a lista da fila desde o in�cio
 	while(q != NULL) {			// la�o para percorrer a lista da fila
 		Lista* t = q->prox;			// guarda o endere�o do pr�ximo n� para que o atual seja liberado sem perder a lista
