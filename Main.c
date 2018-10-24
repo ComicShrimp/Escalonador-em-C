@@ -53,6 +53,9 @@ int main(void) {
     //Aloca memoria para todos processos
     Processo *proc = aloca_processo(num_proc, &sinal, &id_proc);
 
+    //Variavel para guardar o processo q  foi interrompido
+    Processo *aux = aloca_processo(1, &sinal, &id_proc);
+
     Data data;
     data.num_proce = num_proc;
     data.p = proc;
@@ -63,11 +66,11 @@ int main(void) {
     pthread_create(&so, NULL, escalonar, (void*) &data);
 
     long tmp_ocisoso = 0;
+    long tmp_init,tmp_fim;
 
     //Esse argumento do laço não está legal, pois se houver interrupções
     for(i = 0;i < num_proc;i++){
 
-        long tmp_init,tmp_fim;
         tmp_fim = tmp_init = time(NULL);
 
         //Verifica se o processador está ocioso e contabiliza o tempo total
@@ -88,6 +91,15 @@ int main(void) {
 
                 tmp_fim = time(NULL);
             }
+
+            //Caso o sinal seja ativado, o processo que estava em execução será
+            //guardado para ser usado na retomada.
+            if(sinal){
+                set_prioridade(aux, 0, get_prioridade(proc, i));
+                set_contexto(aux, 0, Pronto);
+                set_temp(aux, 0, difftime(get_temp(proc, i), tmp_fim));
+            }
+
         }
 
     }

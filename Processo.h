@@ -12,3 +12,7 @@ void set_temp(Processo *p, int pos, int tempo);
 int get_contexto(Processo *p, int pos);
 
 void set_contexto(Processo *p, int pos, int contexto);
+
+void set_prioridade(Processo *p, int pos, int prioridade);
+
+int get_prioridade(Processo *p, int pos);

@@ -38,3 +38,11 @@ int get_contexto(Processo *p, int pos){
 void set_contexto(Processo *p, int pos, int contexto){
     p[pos].estado = contexto;
 }
+
+void set_prioridade(Processo *p, int pos, int prioridade){
+    p[pos].prioridade = prioridade;
+}
+
+int get_prioridade(Processo *p, int pos){
+    return p[pos].prioridade;
+}
