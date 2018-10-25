@@ -1,4 +1,5 @@
 /* fila.h */
+#include "Processo.h"
 
 /* Tipos exportado */
 typedef struct fila Fila;
@@ -12,12 +13,12 @@ Fila* fila_cria(void);
 /* Função insere
 ** Insere um elemento no fim da Fila
 */
-void fila_insere(Fila* f, float v);
+void fila_insere(Fila* f, Processo *v);
 
 /* Função retira
 ** Remove o elemento do início da Fila
 */
-float fila_retira(Fila* f);
+Processo* fila_retira(Fila* f);
 
 /* Função vazia
 ** Retorna um inteiro (0 ou 1), indicando se a Fila está vazia ou não

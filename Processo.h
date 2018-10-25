@@ -16,3 +16,5 @@ void set_contexto(Processo *p, int pos, int contexto);
 void set_prioridade(Processo *p, int pos, int prioridade);
 
 int get_prioridade(Processo *p, int pos);
+
+Processo* get_processo(Processo *p, int pos);
