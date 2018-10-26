@@ -23,6 +23,8 @@ typedef struct data{
 
 void* escalonar(void* dados);
 
+void* espera(void* dados);
+
 int main(void) {
 
     printf("Simulador de Escalonamento\n");
@@ -152,6 +154,14 @@ void* escalonar(void* dados){
     /*
         Resto do programa
     */
+
+    return NULL;
+}
+
+//função para fazer os processos ficarem em espera pelo tempo determinado
+void* espera(void* dados){
+
+
 
     return NULL;
 }
