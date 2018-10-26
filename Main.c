@@ -121,6 +121,8 @@ void* escalonar(void* dados){
     Data *data;
     data = (Data*) dados;
 
+    long temp_mili, temp_sec;// para fazer a conversão dos segundos
+
     int n_proc = data->num_proce;
     int *id_proc = data->id_proc;
     int *sinal = data->sinal;
@@ -133,8 +135,10 @@ void* escalonar(void* dados){
         srand(time(NULL));
 
         set_contexto(p, i, Pronto);
-        set_prioridade(p, i, rand()%10);//Prioridade vai de 0 a 10
-        set_temp(p, i, rand()%5);//Tempo é em milisegundos
+        set_prioridade(p, i, rand()%10);    //Prioridade vai de 0 a 10
+        temp_mili = (rand()%5000);
+        temp_sec = temp_mili/1000;
+        set_temp(p, i, temp_sec);   //Tempo é em milisegundos
 
         //Se o contexto ja for de pronto, ja é inserido na lista de execução
         if(get_contexto(p, i) == Pronto){
