@@ -16,6 +16,7 @@ enum contexto{
     Execucao
 };
 
+//Struct para passar dados para a thread que irá escalonar os processos
 typedef struct data{
     Processo* p;
     int *prioridade;
@@ -28,30 +29,37 @@ typedef struct data{
     Fila *interrompido;
 } Data;
 
+//Esqueleto das funções que irão virar threads
 void* escalonar(void* dados);
 
 void* espera(void* dados);
 
 void* final(void* dados);
 
+//Função Principal
 int main(void) {
 
     printf("Simulador de Escalonamento\n\n");
 
     printf("Para encerrar o programa digite \'t\' e aperte enter\n");
 
+    //Identificador das threads
     pthread_t so,fim;
 
+    //Possivelmente vai ser mudado para o algoritimo de memoria, e n ta sendo usado
     int memoria[MEM]; //Aloca Memoria
 
+    //Filas utilizadas
     Fila *chegada = fila_cria();
-    Fila *proc_proces = fila_cria();
-    Fila *interrompido = fila_cria();
+    Fila *proc_proces = fila_cria();//De processos criados
+    Fila *interrompido = fila_cria();//De processos que foram interrompidos
 
     int sinal = 0; //Sinalização para o "Processador"
-    //Variavel para encerrar o loop inicial
+
+    //Variavel para encerrar os loops encerrando assim o programa
     int encerrar = 1;
 
+    //Talvez não seja necessario, tem q ver como será a questão da memoria
     //Inicializa toda a memoria como -1
     int i;
     for(i = 0;i < MEM;i++){
@@ -60,9 +68,11 @@ int main(void) {
 
     //Alocar Memoria ligando ao outro programa
 
-    int tipo = 2;
+    int tipo = 2;//Tipo default para não ocorrer erros
     int t_min, t_max;
-    t_min = t_max = 0;
+    t_min = t_max = 0;//Valor padrão para não ter erros
+
+    //Textos de configuração do usuario
     printf("Atenção, com o tempo 0, a aleatoriedade é comprometida !!!\n");
     printf("Tempo de chegada dos processos:\n");
     printf("0 - Zero\n1 - Aleatorio\n2 - Fixo\n\n");
@@ -77,12 +87,13 @@ int main(void) {
         scanf("%d", &t_max);
     }
 
+    //Limpa o buffer do teclado
     fflush(stdin);
 
-    //Aloca memoria para todos processos
-
+    //Valor default da prioridade para não dar erros
     int prioridade = 0;
 
+    //Atribuido os valores para depois passar os dados
     Data data;
     data.prioridade = &prioridade;
     data.encerrar = &encerrar;
@@ -93,15 +104,17 @@ int main(void) {
     data.proc_proces = proc_proces;
     data.interrompido = interrompido;
 
+    //Valores necessarios para medições
     double tmp_ini = 0 ,tmp_fim = 0 , tmp_ocisoso = 0;
 
     struct timeval t_ini, t_fim;
 
+    //Criação de threads para o funcionamento de todo o sistema
     pthread_create(&so, NULL, escalonar, (void*) &data);
 
     pthread_create(&fim, NULL, final, (void*) &encerrar);
 
-    i = 0;
+    i = 0;//Variavel para registrar o numero de processos processados.
     //Esse argumento do laço não está legal, pois se houver interrupções
     while(encerrar){
 
@@ -160,15 +173,17 @@ int main(void) {
         i++;
     }
 
-    pthread_join(so, NULL);
+    pthread_join(so, NULL);//Espera a o so terminar seu trabalho
 
-    printf("Tempo total Ocioso(milissegundos): %f\n",tmp_ocisoso);
+    printf("\nTempo total Ocioso(milissegundos): %f\n",tmp_ocisoso);
+    printf("Numero total de processos: %d\n", i);
 
     return 0;
 }
 
 void* escalonar(void* dados){
 
+    //Recebe os valores passados
     Data *data;
     data = (Data*) dados;
 
@@ -181,12 +196,13 @@ void* escalonar(void* dados){
     Fila *proc_proces = data->proc_proces;
     Fila *interrompido = data->interrompido;
 
+    //Laço so fica ativo até que que seja indicado pelo usuario o tempo de finalização
     while(*encerrar){
 
         //Simula a "chegada" de processos
         Processo *esc = aloca_processo();
 
-        srand(time(NULL));
+        srand(time(NULL));//Redefine a semente da função rand
 
         set_contexto(esc, rand()%3);
         set_prioridade(esc, rand()%PRIORIDADE);
@@ -238,7 +254,7 @@ void* final(void* dados){
     int *final = (int*) dados;
 
     while (getchar() != 't') {
-        //Vai ficar aqui até que seja pressionado algo
+        //Vai ficar aqui até que seja pressionado a tecla t
     };
 
     *final = 0;
