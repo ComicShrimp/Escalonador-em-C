@@ -61,7 +61,7 @@ void fila_libera(Fila* f) {		// libera a memória alocada para a fila
 	free(f);					// libera, por fim, o ponteiro da fila inteira
 }
 
-//Fazer voi imprime dps
+//Fazer imprime dps
 /*
 void fila_imprime(Fila* f) {			// imprime todos os elementos da fila
 	if(!fila_vazia(f)) {				// verifica se a fila n�o est� vazia. Se n�o estiver...
