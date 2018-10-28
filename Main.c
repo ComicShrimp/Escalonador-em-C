@@ -176,7 +176,7 @@ int main(void) {
     pthread_join(so, NULL);//Espera a o so terminar seu trabalho
 
     printf("\nTempo total Ocioso(milissegundos): %f\n",tmp_ocisoso);
-    printf("Numero total de processos: %d\n", i);
+    printf("Numero total de processos: %d\n", i - 1);
 
     return 0;
 }
