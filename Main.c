@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include "Processo.h"
 #include "fila.h"
+#include <sys/time.h>
 
 #define MEM 200
 
@@ -68,22 +69,28 @@ int main(void) {
 
     pthread_create(&so, NULL, escalonar, (void*) &data);
 
-    long tmp_ocisoso = 0;//Averiguar pq está contando diretamente em segundos
-    long tmp_init,tmp_fim;
+    double tmp_ini = 0 ,tmp_fim = 0 , tmp_ocisoso = 0;
+
+    struct timeval t_ini, t_fim;
 
     //Esse argumento do laço não está legal, pois se houver interrupções
     for(i = 0;i < num_proc;i++){
 
         printf("%d\n", fila_vazia(proc_proces));
 
-        tmp_fim = tmp_init = time(NULL);
+        //começa contar o tempo do processo em milisegundos
+        gettimeofday(&t_ini,NULL);
+        tmp_ini = (double) t_ini.tv_usec + ((double)t_ini.tv_sec * (1000000.0));
 
         //Verifica se o processador está ocioso e contabiliza o tempo total
         if(fila_vazia(proc_proces)){
             while (fila_vazia(proc_proces)) {
                 //printf("Ocioso\n");
             }
-            tmp_ocisoso += difftime(time(NULL), tmp_init);
+            // operação para receber e converter os valores
+            gettimeofday(&t_fim,NULL);
+            tmp_fim = (double) t_fim.tv_usec + ((double)t_fim.tv_sec * (1000000.0));
+            tmp_ocisoso += (tmp_fim - tmp_ini) / 1000;
         }
 
         //if(!fila_vazia(proc_proces)){
@@ -92,9 +99,11 @@ int main(void) {
             //interrompido pela sinalização.
             Processo* aux = fila_retira(proc_proces);//Retira o processo que acabou de ser processado
             printf("%d - num: %d\n", get_prioridade(aux, 0),i);
-            while ((difftime(tmp_fim, tmp_init) < get_temp(aux, 0)) && !sinal) {
 
-                tmp_fim = time(NULL);
+            while ( (tmp_fim - tmp_ini) / 1000 < get_temp(aux, 0) && !sinal)
+            {
+              gettimeofday(&t_fim,NULL);
+              tmp_fim = (double)  t_fim.tv_usec + ((double) t_fim.tv_sec * (1000000.0));
             }
 
             printf("------------------------\n");//Divisor entre processos
@@ -113,7 +122,7 @@ int main(void) {
 
     pthread_join(so, NULL);
 
-    printf("%ld\n",tmp_ocisoso);
+    printf("%f\n",tmp_ocisoso);
 
     return 0;
 }
@@ -139,8 +148,7 @@ void* escalonar(void* dados){
         set_contexto(p, i, Pronto);
         set_prioridade(p, i, rand()%10);    //Prioridade vai de 0 a 10
         temp_mili = (rand()%5000);
-        temp_sec = temp_mili/1000;
-        set_temp(p, i, temp_sec);   //Tempo é em milisegundos
+        set_temp(p, i, temp_mili);   //Tempo é em milisegundos
 
         //Se o contexto ja for de pronto, ja é inserido na lista de execução
         if(get_contexto(p, i) == Pronto){
