@@ -21,7 +21,9 @@ typedef struct data{
     int *prioridade;
     int *encerrar;
     int *sinal;
-    int *id_proc;
+    int *tipo;
+    int *t_min;
+    int *t_max;
     Fila *proc_proces;
     Fila *interrompido;
 } Data;
@@ -34,7 +36,9 @@ void* final(void* dados);
 
 int main(void) {
 
-    printf("Simulador de Escalonamento\n");
+    printf("Simulador de Escalonamento\n\n");
+
+    printf("Para encerrar o programa digite \'t\' e aperte enter\n");
 
     pthread_t so,fim;
 
@@ -45,7 +49,6 @@ int main(void) {
     Fila *interrompido = fila_cria();
 
     int sinal = 0; //Sinalização para o "Processador"
-    int id_proc = -1; //ID do processo que fez a sinalização
     //Variavel para encerrar o loop inicial
     int encerrar = 1;
 
@@ -55,12 +58,26 @@ int main(void) {
         memoria[i] = -1;
     }
 
-    printf("Numero de Processos(%d espacos de memoria): \n", MEM);
-
     //Alocar Memoria ligando ao outro programa
 
+    int tipo = 2;
+    int t_min, t_max;
+    t_min = t_max = 0;
+    printf("Atenção, com o tempo 0, a aleatoriedade é comprometida !!!\n");
     printf("Tempo de chegada dos processos:\n");
-    printf("0 - Zero\n1 - Aleatorio\n3 - Fixo\n");
+    printf("0 - Zero\n1 - Aleatorio\n2 - Fixo\n\n");
+    scanf("%d", &tipo);
+
+    if(tipo == 1){
+        printf("Tempo em milissegundos\n");
+        printf("Tempo minimo: ");
+        scanf("%d", &t_min);
+
+        printf("Tempo maximo: ");
+        scanf("%d", &t_max);
+    }
+
+    fflush(stdin);
 
     //Aloca memoria para todos processos
 
@@ -70,7 +87,9 @@ int main(void) {
     data.prioridade = &prioridade;
     data.encerrar = &encerrar;
     data.sinal = &sinal;
-    data.id_proc = &id_proc;
+    data.tipo = &tipo;
+    data.t_min = &t_min;
+    data.t_max = &t_max;
     data.proc_proces = proc_proces;
     data.interrompido = interrompido;
 
@@ -155,7 +174,10 @@ void* escalonar(void* dados){
 
     int *encerrar = data->encerrar;
     int *sinal = data->sinal;
+    int *tipo = data->tipo;
     int *prioridade_cpu = data->prioridade;
+    int *t_min = data->t_min;
+    int *t_max = data->t_max;
     Fila *proc_proces = data->proc_proces;
     Fila *interrompido = data->interrompido;
 
@@ -192,7 +214,11 @@ void* escalonar(void* dados){
             fila_insere(proc_proces, esc);
         }
 
-        usleep(800000);//tempo em microsegundos para mudar o srand
+        if(*tipo == 1){
+            usleep((*t_min * 1000) + (rand() % (*t_max * 1000)));
+        }else if(*tipo == 2){
+            usleep(800000);
+        }
 
     }
 
@@ -211,7 +237,9 @@ void* final(void* dados){
 
     int *final = (int*) dados;
 
-    getchar();
+    while (getchar() != 't') {
+        //Vai ficar aqui até que seja pressionado algo
+    };
 
     *final = 0;
 
