@@ -7,8 +7,6 @@
 #include <sys/time.h>
 
 #define MEM 200
-#define PRIORIDADE 10
-#define TEMPO_CPU 500 //Tempo em milisegundos
 #define TEMPO_ESPERA 200 //Tempo em que o processo irá espera a i/o
 
 enum contexto{
@@ -24,6 +22,8 @@ typedef struct data{
     int *tipo;
     int *t_min;
     int *t_max;
+    int *t_fixo;
+    int *t_cpu;
     int *memoria;
     Fila *proc_proces;
     Fila *espera;
@@ -63,8 +63,9 @@ int main(void) {
     //Alocar Memoria ligando ao outro programa
 
     int tipo = 2;//Tipo default para não ocorrer erros
-    int t_min, t_max;
+    int t_min, t_max,t_fixo;
     t_min = t_max = 0;//Valor padrão para não ter erros
+    t_fixo = 500;
 
     //Textos de configuração do usuario
     printf("Atenção, com o tempo 0, a aleatoriedade é comprometida !!!\n");
@@ -79,10 +80,17 @@ int main(void) {
 
         printf("Tempo maximo: ");
         scanf("%d", &t_max);
+    }else if(tipo == 2){
+        printf("Digite o tempo de chegada: ");
+        scanf("%d", &t_fixo);
     }
 
-    printf("Digite o tempo que sera executado o processo: ");
+    printf("Tempo maximo de CPU : ");
     scanf("%lf", &quantum);
+
+    int t_cpu = 500;
+    printf("Digite o tempo maximo de processo: ");
+    scanf("%d", &t_cpu);
 
     //Limpa o buffer do teclado
     fflush(stdin);
@@ -93,6 +101,8 @@ int main(void) {
     data.tipo = &tipo;
     data.t_min = &t_min;
     data.t_max = &t_max;
+    data.t_fixo = &t_fixo;
+    data.t_cpu = &t_cpu;
     data.proc_proces = proc_proces;
     data.espera = espera;
     data.memoria = &memoria;
@@ -191,6 +201,8 @@ void* escalonar(void* dados){
     Fila *proc_proces = data->proc_proces;
     Fila *espera = data->espera;
     int *memoria = data->memoria;
+    int *t_fixo = data->t_fixo;
+    int *t_cpu = data->t_cpu;
 
     //Laço so fica ativo até que que seja indicado pelo usuario o tempo de finalização
     while(*encerrar){
@@ -201,8 +213,7 @@ void* escalonar(void* dados){
         srand(time(NULL));//Redefine a semente da função rand
 
         set_contexto(esc, rand()%2);
-        set_prioridade(esc, rand()%PRIORIDADE);
-        set_temp(esc, rand()%TEMPO_CPU);
+        set_temp(esc, rand() % *t_cpu);
         set_memoria(esc, 1 + rand()%50);
 
         //Verificar se possui espaço de memoria com o algoritimo de memoria
@@ -222,7 +233,7 @@ void* escalonar(void* dados){
         if(*tipo == 1){
             usleep((*t_min * 1000) + (rand() % (*t_max * 1000)));
         }else if(*tipo == 2){
-            usleep(800000);
+            usleep(*t_fixo * 1000);
         }
 
     }
