@@ -8,7 +8,8 @@
 
 #define MEM 200
 #define PRIORIDADE 10
-#define TEMPO_CPU 5000 //Tempo em milisegundos
+#define TEMPO_CPU 500 //Tempo em milisegundos
+#define TEMPO_ESPERA 200 //Tempo em que o processo irá espera a i/o
 
 enum contexto{
     Pronto,
@@ -19,20 +20,19 @@ enum contexto{
 //Struct para passar dados para a thread que irá escalonar os processos
 typedef struct data{
     Processo* p;
-    int *prioridade;
     int *encerrar;
-    int *sinal;
     int *tipo;
     int *t_min;
     int *t_max;
+    int *memoria;
     Fila *proc_proces;
-    Fila *interrompido;
+    Fila *espera;
 } Data;
 
 //Esqueleto das funções que irão virar threads
 void* escalonar(void* dados);
 
-void* espera(void* dados);
+void* esperar(void* dados);
 
 void* final(void* dados);
 
@@ -44,27 +44,21 @@ int main(void) {
     printf("Para encerrar o programa digite \'t\' e aperte enter\n");
 
     //Identificador das threads
-    pthread_t so,fim;
+    pthread_t so,fim,esp;
 
     //Possivelmente vai ser mudado para o algoritimo de memoria, e n ta sendo usado
-    int memoria[MEM]; //Aloca Memoria
+    int memoria = MEM; //Aloca Memoria
 
     //Filas utilizadas
-    Fila *chegada = fila_cria();
+    Fila *espera = fila_cria();
     Fila *proc_proces = fila_cria();//De processos criados
-    Fila *interrompido = fila_cria();//De processos que foram interrompidos
 
-    int sinal = 0; //Sinalização para o "Processador"
+    double quantum = 100;
 
     //Variavel para encerrar os loops encerrando assim o programa
     int encerrar = 1;
 
-    //Talvez não seja necessario, tem q ver como será a questão da memoria
-    //Inicializa toda a memoria como -1
-    int i;
-    for(i = 0;i < MEM;i++){
-        memoria[i] = -1;
-    }
+    int i = 0;
 
     //Alocar Memoria ligando ao outro programa
 
@@ -87,22 +81,27 @@ int main(void) {
         scanf("%d", &t_max);
     }
 
+    printf("Digite o tempo que sera executado o processo: ");
+    scanf("%lf", &quantum);
+
     //Limpa o buffer do teclado
     fflush(stdin);
 
-    //Valor default da prioridade para não dar erros
-    int prioridade = 0;
-
     //Atribuido os valores para depois passar os dados
     Data data;
-    data.prioridade = &prioridade;
     data.encerrar = &encerrar;
-    data.sinal = &sinal;
     data.tipo = &tipo;
     data.t_min = &t_min;
     data.t_max = &t_max;
     data.proc_proces = proc_proces;
-    data.interrompido = interrompido;
+    data.espera = espera;
+    data.memoria = &memoria;
+
+    Data data_esp;
+    data_esp.espera = espera;
+    data_esp.encerrar = &encerrar;
+    data_esp.proc_proces = proc_proces;
+    data_esp.memoria = &memoria;
 
     //Valores necessarios para medições
     double tmp_ini = 0 ,tmp_fim = 0 , tmp_ocisoso = 0;
@@ -114,13 +113,13 @@ int main(void) {
 
     pthread_create(&fim, NULL, final, (void*) &encerrar);
 
+    pthread_create(&esp, NULL, esperar, (void*) &data_esp);
+
     i = 0;//Variavel para registrar o numero de processos processados.
     //Esse argumento do laço não está legal, pois se houver interrupções
     while(encerrar){
 
-        sinal = 0;
-
-        printf("%d\n", fila_vazia(proc_proces));
+        //printf("%d\n", fila_vazia(proc_proces));
 
         //começa contar o tempo do processo em milisegundos
         gettimeofday(&t_ini,NULL);
@@ -129,7 +128,6 @@ int main(void) {
         //Verifica se o processador está ocioso e contabiliza o tempo total
         if(fila_vazia(proc_proces)){
             while (fila_vazia(proc_proces) && encerrar) {
-                //printf("Ocioso\n");
             }
             // operação para receber e converter os valores
             gettimeofday(&t_fim,NULL);
@@ -140,40 +138,38 @@ int main(void) {
         //Talvez não seja necessario.
         if(!fila_vazia(proc_proces)){
 
-            //Esse laço não pode ter sleep, pois ele deve ser capaz de ser
-            //interrompido pela sinalização.
-            Processo *aux;
-            if(fila_vazia(interrompido)){
-                //Retira o processo que vai ser processado da fila de processos
-                aux = fila_retira(proc_proces);
-            }else{
-                //Retira o processo da fila e processos interrompidos
-                aux = fila_retira(interrompido);
-            }
-            prioridade = get_prioridade(aux);
-            printf("%d - num: %d\n", prioridade,i);
+            //Retira o processo que vai ser processado da fila de processos
+            Processo *aux = fila_retira(proc_proces);
+            printf("Num. Processo : %d\n", i);
 
-            while ((tmp_fim - tmp_ini) / 1000 < get_temp(aux) && !sinal){
+            set_contexto(aux, Execucao);
+
+            while (((tmp_fim - tmp_ini) / 1000 < get_temp(aux)) &&
+                    (tmp_fim - tmp_ini) / 1000 < quantum){
                 gettimeofday(&t_fim,NULL);
                 tmp_fim = (double)  t_fim.tv_usec + ((double) t_fim.tv_sec * (1000000.0));
             }
 
             //Se a sinalização não for ativada deve ser liberado o espaço de memoria
-            if(!sinal){
-                libera_processo(aux);
-            }else{
+            if((tmp_fim - tmp_ini) / 1000 < get_temp(aux)){
+                set_contexto(aux, Pronto);
                 set_temp(aux, get_temp(aux) - (tmp_fim - tmp_ini));
-                fila_insere(interrompido, aux);
+                fila_insere(proc_proces, aux);
+                i--;
+            }else{
+                memoria += get_memoria(aux);
+                libera_processo(aux);
             }
 
             printf("\n------------------------\n");//Divisor entre processos
 
+            i++;
         }
 
-        i++;
     }
 
     pthread_join(so, NULL);//Espera a o so terminar seu trabalho
+    pthread_join(esp, NULL);
 
     printf("\nTempo total Ocioso(milissegundos): %f\n",tmp_ocisoso);
     printf("Numero total de processos: %d\n", i - 1);
@@ -188,13 +184,12 @@ void* escalonar(void* dados){
     data = (Data*) dados;
 
     int *encerrar = data->encerrar;
-    int *sinal = data->sinal;
     int *tipo = data->tipo;
-    int *prioridade_cpu = data->prioridade;
     int *t_min = data->t_min;
     int *t_max = data->t_max;
     Fila *proc_proces = data->proc_proces;
-    Fila *interrompido = data->interrompido;
+    Fila *espera = data->espera;
+    int *memoria = data->memoria;
 
     //Laço so fica ativo até que que seja indicado pelo usuario o tempo de finalização
     while(*encerrar){
@@ -204,30 +199,27 @@ void* escalonar(void* dados){
 
         srand(time(NULL));//Redefine a semente da função rand
 
-        set_contexto(esc, rand()%3);
+        set_contexto(esc, rand()%2);
         set_prioridade(esc, rand()%PRIORIDADE);
         set_temp(esc, rand()%TEMPO_CPU);
+        set_memoria(esc, 1 + rand()%50);
 
         printf("Contexto definido : %d\n", get_contexto(esc));
 
-        if((*prioridade_cpu < get_prioridade(esc)) && fila_vazia(interrompido)){
+        //Verificar se possui espaço de memoria com o algoritimo de memoria
 
-            //*sinal = 1;
-
-            //Inserir no topo da fila e sinalizar
-            //Possivel problema, tomar o lugar de um processo de maior prioridade
-            //que está na fila ou gerar interrupções infinitas
-
-            //Apenas para sinalizar ao usuario que entrou nesse local
-            //printf("Prioridade\n");
-
-            //Fazer função para colocar-lo como o primeiro da fila.
+        while(get_memoria(esc) > *memoria){
+            //Fica parado até q o espaço de memoria esteja liberado
         }
 
-        //Verificar se possui espaço de memoria com o algoritimo de memoria
+        *memoria -= get_memoria(esc);
+
+        printf("Espaço na memoria: %d\n", *memoria);
 
         if(get_contexto(esc) == Pronto){
             fila_insere(proc_proces, esc);
+        }else{
+            fila_insere(espera, esc);
         }
 
         if(*tipo == 1){
@@ -242,9 +234,20 @@ void* escalonar(void* dados){
 }
 
 //função para fazer os processos ficarem em espera pelo tempo determinado
-void* espera(void* dados){
+void* esperar(void* dados){
 
+    Data *data_esp = (void*) dados;
+    Fila *espera = data_esp->espera;
+    int *encerra = data_esp->encerrar;
+    Fila *proc_proces = data_esp->proc_proces;
 
+    while(*encerra){
+        if(!fila_vazia(espera)){
+            srand(time(NULL));
+            usleep(rand() % TEMPO_ESPERA);
+            fila_insere(proc_proces, fila_retira(espera));
+        }
+    }
 
     return NULL;
 }

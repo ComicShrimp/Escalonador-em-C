@@ -20,3 +20,7 @@ int get_prioridade(Processo *p);
 Processo* get_processo(Processo *p, int pos);
 
 void libera_processo(Processo *p);
+
+int get_memoria(Processo *p);
+
+void set_memoria(Processo *p, int memoria);

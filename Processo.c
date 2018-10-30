@@ -9,6 +9,7 @@ struct processo{
     int temp_cpu;
     int estado;
     int finalizado;
+    int memoria;
 };
 
 enum contexto{
@@ -54,4 +55,12 @@ Processo* get_processo(Processo *p, int pos){
 
 void libera_processo(Processo *p){
     free(p);
+}
+
+int get_memoria(Processo *p){
+    return p->memoria;
+}
+
+void set_memoria(Processo *p, int memoria){
+    p->memoria = memoria;
 }
