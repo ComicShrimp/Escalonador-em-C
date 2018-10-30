@@ -140,6 +140,7 @@ int main(void) {
 
             //Retira o processo que vai ser processado da fila de processos
             Processo *aux = fila_retira(proc_proces);
+            printf("Espaço na memoria: %d\n", memoria);
             printf("Num. Processo : %d\n", i);
 
             set_contexto(aux, Execucao);
@@ -204,8 +205,6 @@ void* escalonar(void* dados){
         set_temp(esc, rand()%TEMPO_CPU);
         set_memoria(esc, 1 + rand()%50);
 
-        printf("Contexto definido : %d\n", get_contexto(esc));
-
         //Verificar se possui espaço de memoria com o algoritimo de memoria
 
         while(get_memoria(esc) > *memoria){
@@ -213,8 +212,6 @@ void* escalonar(void* dados){
         }
 
         *memoria -= get_memoria(esc);
-
-        printf("Espaço na memoria: %d\n", *memoria);
 
         if(get_contexto(esc) == Pronto){
             fila_insere(proc_proces, esc);
